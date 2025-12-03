@@ -4,10 +4,11 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import cookies from "js-cookie";
 import AdminNav from "../../../../../components/AdminNav";
-import { ArrowLeft, Upload, Save, Eye } from "lucide-react";
+import { HiOutlinePhotograph } from "react-icons/hi";
+import { BiImageAdd } from "react-icons/bi";
 import dynamic from "next/dynamic";
 
-// Import React Quill dynamically (if you're using it)
+// Import React Quill dynamically
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
 
@@ -15,6 +16,7 @@ export default function EditNews() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
+    category: "",
     image: "",
     imgId: "",
     isPublished: false,
@@ -30,13 +32,20 @@ export default function EditNews() {
   const { id } = router.query;
   const fileInputRef = useRef(null);
 
+  const categories = [
+    "Achievements",
+    "Events",
+    "Admission",
+    "Education",
+    "Scholarship"
+  ];
+
   // Quill modules configuration
   const modules = {
     toolbar: [
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ header: [1, 2, 3, false] }],
       ["bold", "italic", "underline", "strike"],
       [{ list: "ordered" }, { list: "bullet" }],
-      [{ color: [] }, { background: [] }],
       [{ align: [] }],
       ["link", "image"],
       ["clean"],
@@ -76,6 +85,7 @@ export default function EditNews() {
       setFormData({
         title: data.title || "",
         content: data.content || "",
+        category: data.category || "",
         image: data.image || "",
         imgId: data.imgId || "",
         isPublished: data.isPublished || false,
@@ -103,6 +113,14 @@ export default function EditNews() {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview("");
+    setImageFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
     }
   };
 
@@ -144,11 +162,16 @@ export default function EditNews() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, status) => {
     e.preventDefault();
     
     if (!formData.title.trim()) {
       alert("Please enter a title");
+      return;
+    }
+
+    if (!formData.category) {
+      alert("Please select a category");
       return;
     }
 
@@ -164,10 +187,11 @@ export default function EditNews() {
 
       const updateData = {
         title: formData.title,
+        category: formData.category,
         content: formData.content,
         image: imageUrl,
         imgId: publicId,
-        isPublished: formData.isPublished,
+        isPublished: status === "published",
       };
 
       const res = await fetch(
@@ -210,25 +234,26 @@ export default function EditNews() {
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
       
-      <div className={`transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-0' : 'ml-0 md:ml-[280px] lg:ml-[280px]'
-      }`}>
-        <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-5xl mx-auto">
+      <div 
+        className={`transition-all duration-300 ${
+          sidebarCollapsed ? 'md:ml-0' : 'md:ml-[280px]'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="mb-6">
-            <Link href="/admin/dashboard/news">
-              <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to News List</span>
-              </button>
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Edit News Article</h1>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Edit News
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Update the details below to edit the news post
+            </p>
           </div>
 
           {/* Loading State */}
           {loading && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="text-gray-500 mt-4">Loading news article...</p>
             </div>
           )}
@@ -246,120 +271,232 @@ export default function EditNews() {
             </div>
           )}
 
-          {/* Form */}
+          {/* Form Card */}
           {!loading && !error && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Title Field */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Enter news title"
-                  required
-                />
-              </div>
-
-              {/* Image Upload */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Featured Image
-                </label>
-                <div className="space-y-4">
-                  {imagePreview && (
-                    <div className="relative w-full h-64 rounded-lg overflow-hidden">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <form onSubmit={(e) => handleSubmit(e, "published")}>
+                <div className="grid lg:grid-cols-3 gap-6 p-6">
+                  {/* Left Column - Form Fields */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Title Section */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        News Title *
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        placeholder="Enter news title..."
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required
                       />
                     </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
+
+                    {/* Category Section */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Category *
+                      </label>
+                      <select
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        required
+                      >
+                        <option value="">Select a category...</option>
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Content Section */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        News Content *
+                      </label>
+                      <div className="bg-white rounded-lg overflow-hidden border border-gray-300">
+                        <ReactQuill
+                          className="edit-news-editor"
+                          theme="snow"
+                          value={formData.content}
+                          onChange={(value) => setFormData({ ...formData, content: value })}
+                          modules={modules}
+                          placeholder="Write your news content here..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Image Upload */}
+                  <div className="lg:col-span-1">
+                    <div className="sticky top-6">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <HiOutlinePhotograph className="text-lg" />
+                        Featured Image *
+                      </label>
+                      
+                      {/* Upload Area */}
+                      <div className="mb-4">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                          <BiImageAdd className="text-5xl text-gray-400 mx-auto mb-3" />
+                          <label className="cursor-pointer">
+                            <span className="text-blue-600 hover:text-blue-700 font-medium">
+                              Click to upload
+                            </span>
+                            <span className="text-gray-500 block mt-1">or drag and drop</span>
+                            <input
+                              ref={fileInputRef}
+                              onChange={handleImageChange}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                            />
+                          </label>
+                          <p className="text-xs text-gray-500 mt-2">
+                            PNG, JPG, GIF up to 5MB
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Preview Area */}
+                      <div>
+                        {imagePreview ? (
+                          <div className="relative border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-full h-64 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleRemoveImage}
+                              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors shadow-lg"
+                            >
+                              Remove
+                            </button>
+                            <div className="p-3 bg-white border-t border-gray-200">
+                              <p className="text-xs text-gray-600 text-center">
+                                Image Preview
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="border border-gray-200 rounded-lg p-8 bg-gray-50 flex items-center justify-center min-h-[200px]">
+                            <p className="text-gray-400 text-center">
+                              No image selected
+                              <br />
+                              <span className="text-xs">
+                                Preview will appear here
+                              </span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-4 justify-end">
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    onClick={() => router.push("/admin/dashboard/news")}
+                    className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                    disabled={submitting}
                   >
-                    <Upload className="w-4 h-4" />
-                    {imagePreview ? "Change Image" : "Upload Image"}
+                    Cancel
                   </button>
-                </div>
-              </div>
-
-              {/* Content Editor */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Content *
-                </label>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.content}
-                  onChange={(value) => setFormData({ ...formData, content: value })}
-                  modules={modules}
-                  className="h-96 mb-16"
-                />
-              </div>
-
-              {/* Publish Status */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isPublished}
-                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                    className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"
-                  />
-                  <span className="text-sm font-semibold text-gray-700">
-                    Publish this article
-                  </span>
-                </label>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex flex-wrap gap-3 justify-end">
-                  <Link href="/admin/dashboard/news">
-                    <button
-                      type="button"
-                      className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </Link>
-                  <Link href={`/admin/dashboard/news/View/${id}`}>
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Preview
-                    </button>
-                  </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSubmit(e, "draft")}
+                    disabled={submitting}
+                    className="px-8 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save as Draft"
+                    )}
+                  </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    <Save className="w-4 h-4" />
-                    {submitting ? "Updating..." : "Update Article"}
+                    {submitting ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Updating...
+                      </>
+                    ) : (
+                      "Update News"
+                    )}
                   </button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Custom Styles for Quill Editor */}
+      <style>{`
+        .edit-news-editor .ql-container {
+          min-height: 400px;
+          font-size: 16px;
+        }
+        
+        .edit-news-editor .ql-editor {
+          min-height: 400px;
+        }
+
+        .edit-news-editor .ql-toolbar {
+          background-color: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .edit-news-editor .ql-editor.ql-blank::before {
+          color: #9ca3af;
+          font-style: normal;
+        }
+      `}</style>
     </div>
   );
 }
