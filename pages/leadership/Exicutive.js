@@ -34,7 +34,27 @@ const ExicutiveCouncil = () => {
     {
       name: "Mujthaba Nurani",
       image: "/images/exicutive/mujthaba-nurani.jpeg",
-      designation: "Principal - Baithul Izza, Narikkuni",
+      designation: " Head of Senior School (Science & Technology)",
+    },
+    {
+      name: "Jafer Nurani",
+      image: "/images/senate/jafar-nurani.jpg",
+      designation: "Head of inter-state campuses",
+    },
+    {
+      name: "Fazil Nurani",
+      image: "/images/exicutive/fazil-nurani.jpg",
+      designation: " Head of Rabbani Finishing school",
+    },
+    {
+      name: "Uvais Nurani",
+      image: "/images/exicutive/uwais-nurani.jpg",
+      designation: "Head of Open School (Irsuv-un-nabawi)",
+    },
+     {
+      name: "Ubaid Nurani",
+      image: "/images/exicutive/ubaid-nurani.jpg",
+      designation: " Head of Junior School",
     },
   ];
 
