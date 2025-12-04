@@ -1,3 +1,6 @@
+
+// pages/admin/dashboard/news/Create.js  (or similar)
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import cookies from "js-cookie";
@@ -26,17 +29,14 @@ export default function CreateNews() {
     "Events",
     "Admission",
     "Education",
-    "Scholarship"
+    "Scholarship",
   ];
 
   useEffect(() => {
-    const getAdmin = () => {
-      const adminUser = cookies.get("admin");
-      if (adminUser === "false") {
-        router.push("/admin/Login");
-      }
-    };
-    getAdmin();
+    const adminUser = cookies.get("admin");
+    if (adminUser === "false") {
+      router.push("/admin/Login");
+    }
   }, [router]);
 
   // Listen for sidebar toggle events
@@ -45,21 +45,19 @@ export default function CreateNews() {
       setSidebarCollapsed(event.detail.collapsed);
     };
 
-    window.addEventListener('sidebarToggle', handleSidebarToggle);
-    return () => window.removeEventListener('sidebarToggle', handleSidebarToggle);
+    if (typeof window !== "undefined") {
+      window.addEventListener("sidebarToggle", handleSidebarToggle);
+      return () =>
+        window.removeEventListener("sidebarToggle", handleSidebarToggle);
+    }
   }, []);
 
   const handleDescriptionChange = (value) => {
     setDescription(value);
   };
 
-  const handleTitle = (e) => {
-    setTitle(e.target.value);
-  };
-
-  const handleCategory = (e) => {
-    setCategory(e.target.value);
-  };
+  const handleTitle = (e) => setTitle(e.target.value);
+  const handleCategory = (e) => setCategory(e.target.value);
 
   const handleImg = (e) => {
     const file = e.target.files[0];
@@ -88,7 +86,12 @@ export default function CreateNews() {
     if (fileInput) fileInput.value = null;
   };
 
-  const handleUpload = async (e, status = "published") => {
+  /**
+   * handleUpload
+   * @param e - event
+   * @param publish {boolean} - true = publish, false = draft
+   */
+  const handleUpload = async (e, publish = true) => {
     e.preventDefault();
 
     if (!title.trim()) {
@@ -123,7 +126,7 @@ export default function CreateNews() {
 
       const data = await response.json();
       if (response.ok) {
-        await addBlog(data, status);
+        await addBlog(data, publish);
       } else {
         throw new Error(data.error || "Upload failed");
       }
@@ -133,8 +136,14 @@ export default function CreateNews() {
     }
   };
 
-  const addBlog = async (imgData, status) => {
+  /**
+   * addBlog
+   * @param imgData - { imageUrl, publicId }
+   * @param publish {boolean}
+   */
+  const addBlog = async (imgData, publish) => {
     const slug = shortid.generate();
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_PORT}/api/news`, {
         method: "POST",
@@ -144,20 +153,21 @@ export default function CreateNews() {
         },
         body: JSON.stringify({
           title: title,
-          category: category,
+          category: category,           // will be ignored unless you add column/support
           content: description,
-          slug: slug,
+          slug: slug,                   // same here – optional
           image: imgData.imageUrl,
           imgId: imgData.publicId,
-          status: status,
-          createdAt: new Date(),
+          isPublished: publish,
+          publishedAt: publish ? new Date().toISOString() : null,
         }),
       });
 
       if (res.ok) {
         router.push("/admin/dashboard/news");
       } else {
-        throw new Error("Failed to create blog post");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to create news post");
       }
     } catch (error) {
       alert(error.message);
@@ -168,18 +178,16 @@ export default function CreateNews() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
-      
-      <div 
+
+      <div
         className={`transition-all duration-300 ${
-          sidebarCollapsed ? 'md:ml-0' : 'md:ml-[280px]'
+          sidebarCollapsed ? "md:ml-0" : "md:ml-[280px]"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Create News
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Create News</h1>
             <p className="text-gray-600 mt-2">
               Fill in the details below to create a new news post
             </p>
@@ -187,7 +195,8 @@ export default function CreateNews() {
 
           {/* Form Card */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <form onSubmit={(e) => handleUpload(e, "published")}>
+            {/* NOTE: form submit = publish */}
+            <form onSubmit={(e) => handleUpload(e, true)}>
               <div className="grid lg:grid-cols-3 gap-6 p-6">
                 {/* Left Column - Form Fields */}
                 <div className="lg:col-span-2 space-y-6">
@@ -271,7 +280,7 @@ export default function CreateNews() {
                       <HiOutlinePhotograph className="text-lg" />
                       Featured Image * (Max 500KB)
                     </label>
-                    
+
                     {/* Upload Area */}
                     <div className="mb-4">
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
@@ -280,7 +289,9 @@ export default function CreateNews() {
                           <span className="text-blue-600 hover:text-blue-700 font-medium">
                             Click to upload
                           </span>
-                          <span className="text-gray-500 block mt-1">or drag and drop</span>
+                          <span className="text-gray-500 block mt-1">
+                            or drag and drop
+                          </span>
                           <input
                             onChange={handleImg}
                             type="file"
@@ -343,15 +354,20 @@ export default function CreateNews() {
                 >
                   Cancel
                 </button>
+
+                {/* Save as Draft */}
                 <button
                   type="button"
-                  onClick={(e) => handleUpload(e, "draft")}
+                  onClick={(e) => handleUpload(e, false)}
                   disabled={uploading}
                   className="px-8 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {uploading ? (
                     <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        viewBox="0 0 24 24"
+                      >
                         <circle
                           className="opacity-25"
                           cx="12"
@@ -373,6 +389,8 @@ export default function CreateNews() {
                     "Save as Draft"
                   )}
                 </button>
+
+                {/* Publish */}
                 <button
                   type="submit"
                   disabled={uploading}
@@ -380,7 +398,10 @@ export default function CreateNews() {
                 >
                   {uploading ? (
                     <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        viewBox="0 0 24 24"
+                      >
                         <circle
                           className="opacity-25"
                           cx="12"
@@ -414,7 +435,7 @@ export default function CreateNews() {
           min-height: 400px;
           font-size: 16px;
         }
-        
+
         .create-news-editor .ql-editor {
           min-height: 400px;
         }

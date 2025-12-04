@@ -184,85 +184,33 @@
 //       </button>
 //     </div>
 //   );
-// }
+// }// components/ExportButtons.jsx
+// // components/NewsExportButtons.jsx
 
-// components/NewsExportButtons.jsx
 "use client";
-
 import React, { useState } from "react";
 
 export default function NewsExportButtons() {
   const [loading, setLoading] = useState(false);
 
-  const download = (type = "csv") => {
-    // simple approach: open the endpoint which returns a file response
-    // this triggers browser download
+  const downloadServer = (type = "csv") => {
+    // navigate the browser to server export endpoint - it triggers download
     window.location.href = `/api/news-export?type=${type}`;
   };
 
-  const clientCsv = async () => {
-    // optional: client-side CSV generation (small datasets)
-    try {
-      setLoading(true);
-      const res = await fetch("/api/news");
-      if (!res.ok) throw new Error("Failed to fetch news");
-      const json = await res.json();
-      const data = Array.isArray(json.data) ? json.data : json;
-
-      const cols = ["_id","title","content","image","imgId","isPublished","createdAt","publishedAt"];
-      const escape = (v = "") => {
-        if (v === null || v === undefined) return "";
-        const s = String(v);
-        if (/[,"\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-        return s;
-      };
-
-      const rows = data.map(row => cols.map(c => {
-        let v = row[c];
-        if (typeof v === "object" && v !== null) v = JSON.stringify(v);
-        return escape(v);
-      }).join(","));
-
-      const bom = '\uFEFF';
-      const csv = bom + cols.join(",") + "\n" + rows.join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `news-export-${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert("Export failed: " + (err.message || err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       <button
-        onClick={() => download("csv")}
+        onClick={() => downloadServer("csv")}
         className="px-3 py-2 bg-emerald-600 text-white rounded"
       >
-        Download CSV (server)
+        Download CSV
       </button>
-
       <button
-        onClick={() => download("sql")}
+        onClick={() => downloadServer("sql")}
         className="px-3 py-2 bg-gray-800 text-white rounded"
       >
-        Download SQL (server)
-      </button>
-
-      <button
-        onClick={clientCsv}
-        disabled={loading}
-        className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-60"
-      >
-        {loading ? "Preparing..." : "Download CSV (client)"}
+        Download SQL
       </button>
     </div>
   );
