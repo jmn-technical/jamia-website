@@ -11,5 +11,5 @@ export default function AdminDashboardPage() {
   <PostersExportButtons />
   <button className="bg-emerald-600 py-1 px-7 text-white rounded" onClick={() => setIsOpen(true)}>Add</button>
 </div>
-  );
+  );
 }
