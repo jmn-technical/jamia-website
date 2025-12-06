@@ -428,7 +428,7 @@ Jamia Madeenathunnoor`;
               </div>
 
               {/* Category Filters */}
-              <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100 justify-between">
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100 justify-between mx-16">
                 <button
                   onClick={() => setCategoryFilter("all")}
                   className={`px-6 py-2.5 rounded-lg font-medium transition-all ${

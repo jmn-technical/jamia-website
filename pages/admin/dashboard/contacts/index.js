@@ -184,7 +184,7 @@ const getStatusCount = (status) => {
                 <p className="text-gray-600 text-base">
                   <span className="font-semibold text-gray-900">{contacts.length}</span> Total
                   <span className="mx-2">|</span>
-                  <span className="font-semibold text-teal-600">{getStatusCount('new')}</span> New
+                  <span className="font-semibold text-teal-600">{getStatusCount('new')}</span> unread
                   <span className="mx-2">|</span>
                   <span className="font-semibold text-orange-500">{getStatusCount('read')}</span> Read
                 </p>
@@ -224,7 +224,7 @@ const getStatusCount = (status) => {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                New ({getStatusCount("new")})
+                Unread ({getStatusCount("new")})
               </button>
               
               <button
@@ -398,7 +398,7 @@ const getStatusCount = (status) => {
             className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-t-3xl">
               <div className="flex items-start justify-between">
                 <div className="text-white">
                   <h3 className="text-2xl font-bold">
@@ -462,7 +462,7 @@ const getStatusCount = (status) => {
               {selectedContact.phone && (
                 <button
                   onClick={() => handleWhatsAppReply(selectedContact)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-md font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl hover:bg-green-700 transition-colors shadow-md font-semibold"
                 >
                   <FaWhatsapp size={18} />
                   Reply via WhatsApp
