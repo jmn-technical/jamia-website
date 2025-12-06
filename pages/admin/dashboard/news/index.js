@@ -13,6 +13,7 @@ import {
   SquarePen,
   Trash,
   View,
+  Copy,
 } from "lucide-react";
 
 // Improved formatDate function
@@ -273,6 +274,51 @@ export default function Component() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Copy to clipboard function
+  const copyToClipboard = (newsItem) => {
+    // Helper function to decode HTML entities
+    const decodeHtmlEntities = (text) => {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = text;
+      return textarea.value;
+    };
+    
+    const contentText = newsItem?.content ? newsItem.content.replace(/<[^>]*>/g, '') : '';
+    const decodedContent = decodeHtmlEntities(contentText);
+    const sentences = decodedContent.match(/[^.!?]+[.!?]+/g) || [];
+    const firstTwoSentences = sentences.slice(0, 2).join(' ').trim();
+    
+    const shareUrl = `${window.location.origin}/News/${newsItem?.id}`;
+    const decodedUrl = decodeURIComponent(shareUrl);
+    const trimmedTitle = newsItem?.title?.trim() || 'Untitled';
+    
+    const text = `*${trimmedTitle}*
+
+${firstTwoSentences}
+
+Read more:
+${decodedUrl}
+
+======================
+Follow For Madeenathunnoor Live Updates
+
+Instagram:
+https://www.instagram.com/madeenathunnoor.live/
+
+Facebook:
+https://www.facebook.com/Madeenathunnoor.Live
+
+Jamia Madeenathunnoor`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy to clipboard');
+    });
+  };
+
   useEffect(() => {
     const handleSidebarChange = (e) => {
       setSidebarCollapsed(e.detail.collapsed);
@@ -284,6 +330,7 @@ export default function Component() {
         window.removeEventListener("sidebarToggle", handleSidebarChange);
     }
   }, []);
+
   const getCategoryCount = (category) => {
     return data.filter(
       (item) => normalizeCategory(item.category) === normalizeCategory(category)
@@ -558,7 +605,7 @@ export default function Component() {
                                   href={`/admin/dashboard/news/View/${d?.id}`}
                                 >
                                   <button
-                                    className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-2.5 rounded-lg text-xs font-medium transition-all shadow-md hover:shadow-lg relative group"
+                                    className="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white p-2.5 rounded-lg text-xs font-medium transition-all shadow-md hover:shadow-lg relative group"
                                     title="View"
                                   >
                                     <View className="w-4 h-4" />
@@ -571,7 +618,7 @@ export default function Component() {
                                   href={`/admin/dashboard/news/Edit/${d?.id}`}
                                 >
                                   <button
-                                    className="bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white p-2.5 rounded-lg text-xs font-medium transition-all shadow-md hover:shadow-lg relative group"
+                                    className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-2.5 rounded-lg text-xs font-medium transition-all shadow-md hover:shadow-lg relative group"
                                     title="Edit"
                                   >
                                     <SquarePen className="w-4 h-4" />
@@ -580,6 +627,16 @@ export default function Component() {
                                     </span>
                                   </button>
                                 </Link>
+                                <button
+                                  onClick={() => copyToClipboard(d)}
+                                  className="bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white p-2.5 rounded-lg text-xs font-medium transition-all shadow-md hover:shadow-lg relative group"
+                                  title="Copy"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+                                    Copy
+                                  </span>
+                                </button>
                                 {d?.ispublished ? (
                                   <button
                                     onClick={() => unPublishBlog(d?.id)}

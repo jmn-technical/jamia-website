@@ -108,15 +108,7 @@ const NewsDetailPage = () => {
     );
   };
 
-  const shareToTwitter = () => {
-    const encodedUrl = encodeURIComponent(shareUrl);
-    const encodedTitle = encodeURIComponent(shareTitle);
-    window.open(
-      `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}&via=yourTwitterHandle`,
-      "_blank",
-      "width=600,height=400"
-    );
-  };
+
 
   const shareToLinkedIn = () => {
     const encodedUrl = encodeURIComponent(shareUrl);
@@ -127,23 +119,8 @@ const NewsDetailPage = () => {
     );
   };
 
-  const shareToPinterest = () => {
-    const encodedUrl = encodeURIComponent(shareUrl);
-    const encodedImage = encodeURIComponent(shareImage);
-    const encodedDescription = encodeURIComponent(shareBody);
-    window.open(
-      `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImage}&description=${encodedDescription}`,
-      "_blank",
-      "width=600,height=400"
-    );
-  };
 
-  const shareViaEmail = () => {
-    const encodedSubject = encodeURIComponent(shareTitle);
-    const encodedBody = encodeURIComponent(`${shareBody}\n\nRead more: ${shareUrl}`);
-    window.location.href = `mailto:?subject=${encodedSubject}&body=${encodedBody}`;
-  };
-
+ 
 const shareToWhatsApp = () => {
     // Helper function to decode HTML entities
     const decodeHtmlEntities = (text) => {
